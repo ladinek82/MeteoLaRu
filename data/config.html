@@ -1,0 +1,57 @@
+<html>
+<header>
+	<style>
+		.button {
+			text-decoration: none;
+			background-color: #EEEEEE;
+			color: #333333;
+			padding: 5px 8px 5px 8px;
+			border-top: 1px solid #CCCCCC;
+			border-right: 1px solid #333333;
+			border-bottom: 1px solid #333333;
+			border-left: 1px solid #CCCCCC;
+		}
+		input {
+			margin: 10px 0px 10px 0px;
+		}
+		input[type="text"] {
+			width: 100%;
+		}
+		.errMsg{
+			display: none;
+      background-color: orangered;
+      border-radius: 10px;
+      padding: 5px;
+		}
+	</style>
+	<script>
+		var errMsgVisible = #=errMsgVisible#;
+		window.onload = function () {
+			if(errMsgVisible === true)
+				document.getElementsByClassName("errMsg")[0].style.display = 'block';
+		};
+    
+    function btnSubmitClick(){
+        document.getElementsByClassName("errMsg")[0].style.display = 'none';
+    }
+	</script>
+</header>
+<body>
+	<div style="width:400px; margin:0 auto;">
+		<p class="errMsg">#=errMsg#</p>
+		<h1>Configuration</h1>
+		<form action="/save" method="POST">
+			<h3>Wifi settings</h3>
+			<label>SSID</label><br />
+			<input class="formLabel" type="text" name="ssid" placeholder="SSID" value="#=ssid#" /><br />
+			<label>Password</label><br />
+			<input type="text" name="password" placeholder="Password" value="#=password#" /><br />
+			<h3>ThinkSpeak</h3>
+			<label>Write API Key</label><br />
+			<input type="text" name="thinkSpeakAPIKey" placeholder="ThinkSpeak APIKey" value="#=thinkSpeakAPIKey#" /><br />
+			<br />
+			<input type="submit" class="button" onclick="btnSubmitClick();" value="Save and Connect"/>
+		</form>
+	</div>
+</body>
+</html>
