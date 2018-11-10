@@ -5,6 +5,8 @@ struct Config {
    char password[100];
    char thinkSpeakAPIKey[50];
    bool apState;
+   char fwLogin[50];
+   char fwPassword[50];
 };
 
 struct Config cfg;
@@ -36,11 +38,14 @@ void setup() {
     Serial.println("EEPROM contains data ("+String(Storage_PercentUsed())+ "%)");
   
     cfg = Storage_LoadConfig();
-    
+    Serial.println("----------CFG---------");
     Serial.println(cfg.ssid);
     Serial.println(cfg.password);
     Serial.println(cfg.thinkSpeakAPIKey);
     Serial.println(cfg.apState);
+    Serial.println(cfg.fwLogin);
+    Serial.println(cfg.fwPassword);
+    Serial.println("----------CFG---------");
     
     wifiClientConnected = Wifi_ClientConnect(cfg.ssid, cfg.password);
 //    if(wifiClientConnected){

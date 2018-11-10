@@ -1,6 +1,12 @@
 #include <ESP8266WebServer.h>
+//#include <ESP8266mDNS.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 ESP8266WebServer webServer(80);
+ESP8266HTTPUpdateServer httpUpdater;
+
+//const char* host = "meteolaru";
+const char* update_path = "/firmware";
 
 const String html_ssid = "#=ssid#";
 const String html_clientIP = "#=clientIP#";
@@ -9,6 +15,8 @@ const String html_password = "#=password#";
 const String html_thinkSpeakAPIKey= "#=thinkSpeakAPIKey#";
 const String html_errMsg = "#=errMsg#";
 const String html_errMsgVisible = "#=errMsgVisible#";
+const String html_fwPassword = "#=fwPassword#";
+const String html_fwLogin = "#=fwLogin#";
 
 const String html_temperature = "#=temperature#";
 const String html_pressure = "#=pressure#";
@@ -27,8 +35,25 @@ void WebServer_Init(){
   webServer.on("/config", handleConfig);
   webServer.on("/save", HTTP_POST, handleSave);
   webServer.on("/ap", handleAP);
+ 
+
+  //MDNS.begin(host);
+  if(cfg.fwLogin == NULL || cfg.fwPassword == NULL){
+    strcpy(cfg.fwLogin, "admin");
+    strcpy(cfg.fwPassword, "admin");
+    Storage_SaveConfig(cfg);
+  }
+  httpUpdater.setup(&webServer, update_path, cfg.fwLogin, cfg.fwPassword);
   webServer.begin();
-  Serial.println("HTTP server started");  
+  Serial.println("HTTP server started");
+  
+  //MDNS.addService("http", "tcp", 80);
+  //String addr =  "192.168.4.1";
+  //if(wifiClientConnected){
+  //  addr =  WiFi.localIP().toString();
+  //}
+  Serial.println("HTTPUpdateServer ready");
+  //Serial.println("Url: http://"+addr+update_path+", Login: "+cfg.fwLogin+", Password: " + cfg.fwPassword);
 }
 
 void headerDisableCache(){
@@ -95,6 +120,8 @@ void handleConfig() {
   html.replace(html_ssid, String(cfg.ssid));
   html.replace(html_password, String(cfg.password));
   html.replace(html_thinkSpeakAPIKey, String(cfg.thinkSpeakAPIKey));
+  html.replace(html_fwPassword, String(cfg.fwLogin));
+  html.replace(html_fwLogin, String(cfg.fwPassword));
 
 
   headerDisableCache();
@@ -115,7 +142,11 @@ void handleSave() {  // If a POST request is made to URI /login
   sStr.toCharArray(cfg.ssid,sStr.length()+1);
   String pStr = webServer.arg("password");
   pStr.toCharArray(cfg.password ,pStr.length()+1);
-
+  String fwlStr = webServer.arg("fwLogin");
+  fwlStr.toCharArray(cfg.fwLogin,fwlStr.length()+1);
+  String fwpStr = webServer.arg("fwPassword");
+  fwpStr.toCharArray(cfg.fwPassword ,fwpStr.length()+1);
+  
   headerDisableCache();
   webServer.sendHeader("Connection", "close", true);
   webServer.sendHeader("Refresh", "30;url=/config?conn=1", true);
