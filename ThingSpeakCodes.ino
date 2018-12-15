@@ -4,8 +4,8 @@ const char* server = "api.thingspeak.com";
 
 WiFiClient tsClient;
 
-void ts_WriteData(String data1, String data2, String data3){
-  Serial.println("Sending data to Thingspeak");
+void ts_WriteData(String data1, String data2, String data3, String data4){
+  Serial.print("Sending data to Thingspeak...");
   if (tsClient.connect(server,80)) {
     String msg = cfg.thinkSpeakAPIKey;
     msg +="&field1=";
@@ -14,6 +14,8 @@ void ts_WriteData(String data1, String data2, String data3){
     msg += String(data2);
     msg +="&field3=";
     msg += String(data3);
+    msg +="&field4=";
+    msg += String(data4);    
     msg += "\r\n\r\n";
 
     tsClient.print("POST /update HTTP/1.1\n");
@@ -27,4 +29,5 @@ void ts_WriteData(String data1, String data2, String data3){
     tsClient.print(msg);
   }
   tsClient.stop();
+  Serial.println("OK");
 }

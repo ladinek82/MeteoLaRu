@@ -13,9 +13,10 @@ struct Config cfg;
 
 bool wifiClientConnected = false;
 bool bmeState = false;
+bool dsState = false;
 int mainPeriod = 5;
 
-Statistic tempStatistic, humiStatistic, presStatistic;
+Statistic temp1Statistic,temp2Statistic, humiStatistic, presStatistic;
 int sendingCounter = 0;
 int sendingPeriod = 60;
 int numSample = 24; // 12 ~ 1min
@@ -73,6 +74,7 @@ void setup() {
   
   WebServer_Init();
   bmeState = BME280_Init();
+  dsState = DS18B20_Init();
 }
 
 void loop() {
@@ -81,34 +83,50 @@ void loop() {
       //BME280_ReadData(); 
     //}
     if(bmeState){
-      tempStatistic.add(BME280_ReadTemperature());
+      temp1Statistic.add(BME280_ReadTemperature());
       humiStatistic.add(BME280_ReadHumidity());
       presStatistic.add(BME280_ReadPressure());
       counterSample++;
     }
-    if(wifiClientConnected && bmeState && (sendingCounter * mainPeriod) >= sendingPeriod){  
+    if(dsState){
+      temp2Statistic.add(DS18B20_ReadTemperature());
+    }
+    if(wifiClientConnected && (sendingCounter * mainPeriod) >= sendingPeriod){  
       sendingCounter = 0;
-      
-      double temperature = tempStatistic.average();
+
+      String sTemp1 = "", sTemp2 = "";
+      if(bmeState){      
+        double temperature1 = temp1Statistic.average();
+        Serial.print("Temperature BME280 = ");
+        Serial.print(temperature1);
+        Serial.println(" *C");
+        sTemp1 = String(temperature1);
+      }
+      if(dsState){   
+        double temperature2 = temp2Statistic.average();
+        Serial.print("Temperature DS18B20 = ");
+        Serial.print(temperature2);
+        Serial.println(" *C");
+        sTemp2 = String(temperature2);
+      }
       double pressure = presStatistic.average();
-      double humidity = humiStatistic.average();
-      Serial.print("Temperature = ");
-      Serial.print(temperature);
-      Serial.println(" *C");
+      double humidity = humiStatistic.average();      
       Serial.print("Pressure = ");
       Serial.print(pressure);
       Serial.println(" hPa");
       Serial.print("Humidity = ");
       Serial.print(humidity);
       Serial.println(" %");
-      ts_WriteData(String(temperature),String(pressure),String(humidity));
-      tempStatistic.clear();
+      ts_WriteData(sTemp1,String(pressure),String(humidity),sTemp2);
+      temp1Statistic.clear();
+      temp2Statistic.clear();
       presStatistic.clear();
       humiStatistic.clear();
     }
 
     if(numSample < counterSample){ // pojistka kdyby nebylo mozne odesilat
-      tempStatistic.clear();
+      temp1Statistic.clear();
+      temp2Statistic.clear();
       presStatistic.clear();
       humiStatistic.clear();
       counterSample = 0;
@@ -117,4 +135,5 @@ void loop() {
     
     sendingCounter++;
     delay(mainPeriod*1000);
+    //ESP.deepSleep(deepSleep); // Go back to sleep
 }
