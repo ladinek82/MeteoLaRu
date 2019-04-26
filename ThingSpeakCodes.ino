@@ -1,33 +1,31 @@
 #include <WiFiClientSecure.h>
+#include "ThingSpeak.h"
 
 const char* server = "api.thingspeak.com";
 
 WiFiClient tsClient;
 
-void ts_WriteData(String data1, String data2, String data3, String data4){
-  Serial.print("Sending data to Thingspeak...");
-  if (tsClient.connect(server,80)) {
-    String msg = cfg.thinkSpeakAPIKey;
-    msg +="&field1=";
-    msg += String(data1);
-    msg +="&field2=";
-    msg += String(data2);
-    msg +="&field3=";
-    msg += String(data3);
-    msg +="&field4=";
-    msg += String(data4);    
-    msg += "\r\n\r\n";
-
-    tsClient.print("POST /update HTTP/1.1\n");
-    tsClient.print("Host: api.thingspeak.com\n");
-    tsClient.print("Connection: close\n");
-    tsClient.print("X-THINGSPEAKAPIKEY: "+ String(cfg.thinkSpeakAPIKey)+"\n");
-    tsClient.print("Content-Type: application/x-www-form-urlencoded\n");
-    tsClient.print("Content-Length: ");
-    tsClient.print(msg.length());
-    tsClient.print("\n\n");
-    tsClient.print(msg);
+void ts_WriteData(String data1, String data2, String data3, String data4){  
+  if(cfg.thinkSpeakAPIKey == NULL || cfg.thinkSpeakChNumber == 0)
+  {
+    Serial.print("Thingspeak has not set.");
+    return;
   }
-  tsClient.stop();
-  Serial.println("OK");
+  Serial.print("Sending data to Thingspeak...");
+  ThingSpeak.begin(tsClient);
+  
+ 
+  ThingSpeak.setField(1, data1);
+  ThingSpeak.setField(2, data2);
+  ThingSpeak.setField(3, data3);
+  ThingSpeak.setField(4, data4);
+
+  int x = ThingSpeak.writeFields(cfg.thinkSpeakChNumber, cfg.thinkSpeakAPIKey);
+  // Check the return code
+  if(x == 200){
+    Serial.println("OK");
+  }
+  else{
+    Serial.println("ERROR (Problem updating channel. HTTP error code " + String(x) + ")");
+  }
 }

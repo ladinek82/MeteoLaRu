@@ -7,6 +7,7 @@ struct Config {
    bool apState;
    char fwLogin[50];
    char fwPassword[50];
+   unsigned long thinkSpeakChNumber;
 };
 
 struct Config cfg;
@@ -43,6 +44,7 @@ void setup() {
     Serial.println(cfg.ssid);
     Serial.println(cfg.password);
     Serial.println(cfg.thinkSpeakAPIKey);
+    Serial.println(cfg.thinkSpeakChNumber);    
     Serial.println(cfg.apState);
     Serial.println(cfg.fwLogin);
     Serial.println(cfg.fwPassword);
@@ -75,6 +77,8 @@ void setup() {
   WebServer_Init();
   bmeState = BME280_Init();
   dsState = DS18B20_Init();
+
+   Serial.println("Init finished. Start main loop.");
 }
 
 void loop() {

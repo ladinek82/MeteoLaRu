@@ -13,12 +13,14 @@ const String html_clientIP = "#=clientIP#";
 const String html_apState = "#=apState#";
 const String html_password = "#=password#";
 const String html_thinkSpeakAPIKey= "#=thinkSpeakAPIKey#";
+const String html_thinkSpeakChNumber= "#=thinkSpeakChNumber#";
 const String html_errMsg = "#=errMsg#";
 const String html_errMsgVisible = "#=errMsgVisible#";
 const String html_fwPassword = "#=fwPassword#";
 const String html_fwLogin = "#=fwLogin#";
 
-const String html_temperature = "#=temperature#";
+const String html_temperature1 = "#=temperature1#";
+const String html_temperature2 = "#=temperature2#";
 const String html_pressure = "#=pressure#";
 const String html_humidity = "#=humidity#";
 
@@ -73,7 +75,8 @@ void handleRoot() {
   html.replace(html_ssid, ssid);
   html.replace(html_clientIP, ipAddr);
   html.replace(html_apState, cfg.apState ? "true" : "false");
-  html.replace(html_temperature, BME280_ReadStrTemperature());
+  html.replace(html_temperature1, BME280_ReadStrTemperature());
+  html.replace(html_temperature2, DS18B20_ReadStrTemperature());
   html.replace(html_pressure, BME280_ReadStrPressure());
   html.replace(html_humidity, BME280_ReadStrHumidity());
 
@@ -120,6 +123,7 @@ void handleConfig() {
   html.replace(html_ssid, String(cfg.ssid));
   html.replace(html_password, String(cfg.password));
   html.replace(html_thinkSpeakAPIKey, String(cfg.thinkSpeakAPIKey));
+  html.replace(html_thinkSpeakChNumber, String(cfg.thinkSpeakChNumber));
   html.replace(html_fwPassword, String(cfg.fwLogin));
   html.replace(html_fwLogin, String(cfg.fwPassword));
 
@@ -129,13 +133,17 @@ void handleConfig() {
 }
 
 void handleSave() {  // If a POST request is made to URI /login
-  if( ! webServer.hasArg("ssid") || ! webServer.hasArg("password") || ! webServer.hasArg("thinkSpeakAPIKey")
-      || webServer.arg("ssid") == NULL || webServer.arg("password") == NULL | webServer.arg("thinkSpeakAPIKey") == NULL) { // If the POST request doesn't have username and password data
+  if( ! webServer.hasArg("ssid") || ! webServer.hasArg("password") || ! webServer.hasArg("thinkSpeakAPIKey") || ! webServer.hasArg("thinkSpeakChNumber")
+      || webServer.arg("ssid") == NULL || webServer.arg("password") == NULL || webServer.arg("thinkSpeakAPIKey") == NULL || webServer.arg("thinkSpeakChNumber") == NULL) { // If the POST request doesn't have username and password data
     headerDisableCache();
     webServer.send(400, "text/plain", "400: Invalid Request");
     return;
   } 
-
+  
+  String tsnStr = webServer.arg("thinkSpeakChNumber");  
+  //char *tsnChars;
+  //tsnStr.toCharArray(tsnChars,tsnStr.length()+1);
+  cfg.thinkSpeakChNumber = tsnStr.toInt(); // strtoul(tsnChars,NULL,10);
   String tsStr = webServer.arg("thinkSpeakAPIKey");
   tsStr.toCharArray(cfg.thinkSpeakAPIKey,tsStr.length()+1);
   String sStr = webServer.arg("ssid");

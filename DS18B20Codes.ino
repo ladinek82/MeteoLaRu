@@ -2,7 +2,7 @@
 #include <DallasTemperature.h>
 
 // Data wire is plugged into pin D1 on the ESP8266 12-E - GPIO 5
-#define ONE_WIRE_BUS 5
+#define ONE_WIRE_BUS 4
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature DS18B20(&oneWire);
   
