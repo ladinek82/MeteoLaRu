@@ -15,12 +15,12 @@ struct Config cfg;
 bool wifiClientConnected = false;
 bool bmeState = false;
 bool dsState = false;
-int mainPeriod = 5;
+int mainPeriod = 5; //v sekundach
 
 Statistic temp1Statistic,temp2Statistic, humiStatistic, presStatistic;
 int sendingCounter = 0;
-int sendingPeriod = 60;
-int numSample = 24; // 12 ~ 1min
+int sendingPeriod = 300; // perioda odesilani v sekundach
+int numSample = 12; // 12 ~ 1min pro mainPeriod = 5
 int counterSample = 0;
 
 /* EEPROM */
@@ -82,15 +82,18 @@ void setup() {
 }
 
 void loop() {
+    //------------
+//    Serial.print("Loop; sendingCounter=");Serial.print(sendingCounter);Serial.print("(");Serial.print(sendingCounter * mainPeriod);Serial.print("), sendingPeriod=");Serial.print(sendingPeriod);Serial.println("");
+//    if(bmeState){
+//      BME280_ReadData(); 
+//    }
+    //------------
     WebServer_HandleClient();
-    //if(bmeState){
-      //BME280_ReadData(); 
-    //}
     if(bmeState){
       temp1Statistic.add(BME280_ReadTemperature());
       humiStatistic.add(BME280_ReadHumidity());
       presStatistic.add(BME280_ReadPressure());
-      counterSample++;
+      counterSample++;      
     }
     if(dsState){
       temp2Statistic.add(DS18B20_ReadTemperature());
@@ -133,8 +136,7 @@ void loop() {
       temp2Statistic.clear();
       presStatistic.clear();
       humiStatistic.clear();
-      counterSample = 0;
-      sendingCounter = 0;
+      counterSample = 0;     
     }
     
     sendingCounter++;
