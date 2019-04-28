@@ -18,10 +18,9 @@ bool dsState = false;
 int mainPeriod = 5; //v sekundach
 
 Statistic temp1Statistic,temp2Statistic, humiStatistic, presStatistic;
-int sendingCounter = 0;
-int sendingPeriod = 300; // perioda odesilani v sekundach
-int numSample = 12; // 12 ~ 1min pro mainPeriod = 5
-int counterSample = 0;
+int measureTHPCounter = 0;
+int measureTHPPeriod = 300; // perioda mereni v sekundach
+int numSample = 10;
 
 /* EEPROM */
 
@@ -81,65 +80,77 @@ void setup() {
    Serial.println("Init finished. Start main loop.");
 }
 
-void loop() {
+void loopMeasureTHP() {
     //------------
 //    Serial.print("Loop; sendingCounter=");Serial.print(sendingCounter);Serial.print("(");Serial.print(sendingCounter * mainPeriod);Serial.print("), sendingPeriod=");Serial.print(sendingPeriod);Serial.println("");
 //    if(bmeState){
 //      BME280_ReadData(); 
 //    }
     //------------
-    WebServer_HandleClient();
+  temp1Statistic.clear();
+  temp2Statistic.clear();
+  presStatistic.clear();
+  humiStatistic.clear();
+  int thpSample = 0;    
+  while(thpSample < numSample){
     if(bmeState){
       temp1Statistic.add(BME280_ReadTemperature());
       humiStatistic.add(BME280_ReadHumidity());
-      presStatistic.add(BME280_ReadPressure());
-      counterSample++;      
+      presStatistic.add(BME280_ReadPressure());          
     }
     if(dsState){
       temp2Statistic.add(DS18B20_ReadTemperature());
     }
-    if(wifiClientConnected && (sendingCounter * mainPeriod) >= sendingPeriod){  
-      sendingCounter = 0;
+    thpSample++; 
+    delay(1000);
+  }
+  
+  String sTemp1 = "", sTemp2 = "";
+  if(bmeState){      
+    double temperature1 = temp1Statistic.average();
+    Serial.print("Temperature BME280 = ");
+    Serial.print(temperature1);
+    Serial.println(" *C");
+    sTemp1 = String(temperature1);
+  }
+  if(dsState){   
+    double temperature2 = temp2Statistic.average();
+    Serial.print("Temperature DS18B20 = ");
+    Serial.print(temperature2);
+    Serial.println(" *C");
+    sTemp2 = String(temperature2);
+  }
+  double pressure = presStatistic.average();
+  double humidity = humiStatistic.average();      
+  Serial.print("Pressure = ");
+  Serial.print(pressure);
+  Serial.println(" hPa");
+  Serial.print("Humidity = ");
+  Serial.print(humidity);
+  Serial.println(" %");
+  
+  if(wifiClientConnected){      
+    ts_WriteData(sTemp1,String(pressure),String(humidity),sTemp2);
+  }
+  else{
+    Serial.println("Device is not connected.");
+  }
 
-      String sTemp1 = "", sTemp2 = "";
-      if(bmeState){      
-        double temperature1 = temp1Statistic.average();
-        Serial.print("Temperature BME280 = ");
-        Serial.print(temperature1);
-        Serial.println(" *C");
-        sTemp1 = String(temperature1);
-      }
-      if(dsState){   
-        double temperature2 = temp2Statistic.average();
-        Serial.print("Temperature DS18B20 = ");
-        Serial.print(temperature2);
-        Serial.println(" *C");
-        sTemp2 = String(temperature2);
-      }
-      double pressure = presStatistic.average();
-      double humidity = humiStatistic.average();      
-      Serial.print("Pressure = ");
-      Serial.print(pressure);
-      Serial.println(" hPa");
-      Serial.print("Humidity = ");
-      Serial.print(humidity);
-      Serial.println(" %");
-      ts_WriteData(sTemp1,String(pressure),String(humidity),sTemp2);
-      temp1Statistic.clear();
-      temp2Statistic.clear();
-      presStatistic.clear();
-      humiStatistic.clear();
-    }
+  temp1Statistic.clear();
+  temp2Statistic.clear();
+  presStatistic.clear();
+  humiStatistic.clear();
+}
 
-    if(numSample < counterSample){ // pojistka kdyby nebylo mozne odesilat
-      temp1Statistic.clear();
-      temp2Statistic.clear();
-      presStatistic.clear();
-      humiStatistic.clear();
-      counterSample = 0;     
-    }
-    
-    sendingCounter++;
-    delay(mainPeriod*1000);
-    //ESP.deepSleep(deepSleep); // Go back to sleep
+
+void loop(){
+  WebServer_HandleClient();
+
+  if((measureTHPCounter * mainPeriod) >= measureTHPPeriod){
+    loopMeasureTHP();
+    measureTHPCounter = 0;
+  }
+
+  measureTHPCounter++;
+  delay(mainPeriod*1000);
 }
