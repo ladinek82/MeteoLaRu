@@ -5,6 +5,7 @@
 Adafruit_BME280 bme; // I2C 
 
 #define SEALEVELPRESSURE_HPA (1026.52)
+#define SEALEVELHIGH_M (194)
 
 bool BME280_Init(){
   Serial.println("Start inicialize BME280");
@@ -51,7 +52,8 @@ String BME280_ReadStrHumidity(){
 
 String BME280_ReadStrPressure(){
   bme.takeForcedMeasurement();
-  double data = bme.readPressure()/100.0F;
+  double pres = bme.readPressure()/100.0F;
+  double data = bme.seaLevelForAltitude(SEALEVELHIGH_M, pres);
   char charData[6];
   dtostrf(data, 5, 1, charData);
   delay(100);
@@ -65,7 +67,9 @@ double BME280_ReadHumidity(){
 
 double BME280_ReadPressure(){
   bme.takeForcedMeasurement();
-  return bme.readPressure()/100.0F;
+  double pres = bme.readPressure()/100.0F;
+  double data = bme.seaLevelForAltitude(SEALEVELHIGH_M, pres);
+  return data;
 }
 
 double BME280_ReadTemperature(){

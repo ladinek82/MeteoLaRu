@@ -24,12 +24,17 @@ String DS18B20_ReadStrTemperature(){
 }
 
 double DS18B20_ReadTemperature(){
-  for(int i=0;i<20;i++) {
+  for(int i=0;i<22;i++) {
     DS18B20.requestTemperatures(); 
     double data = DS18B20.getTempCByIndex(0);
     if (data != 85.0 && data != (-127.0))   
       return data;
     delay(100);
+    if(i%10==0){
+      Serial.println("DS18B20: 10 errors in line. Reinit!");
+      DS18B20_Init();
+    }
   }
+  
   return 8888;  
 }
